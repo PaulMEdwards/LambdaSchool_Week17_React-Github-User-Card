@@ -12,13 +12,14 @@ class App extends React.Component {
       myFollowers: [],
       myFollowing: []
     };
+    // this.fetchData = this.fetchData.bind(this);
   }
-
+  
   componentDidMount() {
     let self = this;
-
-    async function fetchData(returnBucket, remoteDataSourceUri) {
-      await Axios.get(remoteDataSourceUri)
+    
+    async function fetchData(returnBucket, userData) {
+      await Axios.get("https://api.github.com/users/"+userData)
       .then(res => {
         let d = res.data;
         console.log(returnBucket+': ', d);
@@ -26,22 +27,25 @@ class App extends React.Component {
       })
       .catch(e => console.log("Error: ", e));
     }
+    
+    fetchData('myGitHubData', "PaulMEdwards");
 
-    fetchData('myGitHubData', "https://api.github.com/users/PaulMEdwards");
-    fetchData('myFollowers', "https://api.github.com/users/PaulMEdwards/followers");
-    fetchData('myFollowing', "https://api.github.com/users/PaulMEdwards/following");
+    fetchData('myFollowers', "PaulMEdwards/followers");
+    fetchData('myFollowing', "PaulMEdwards/following");
+
+    async function populateFollowersData() {
+      console.log('populateFollowersData():');
+      console.log('self.state.myFollowers.length: ', self.state.myFollowers.length);
+      for (let Fers = 0; Fers < self.state.myFollowers.length; Fers++) {
+        console.log('myFollowers['+Fers+']');
+        await fetchData('myFollowers['+Fers+']', self.state.myFollowers[Fers].login);
+      }
+    }
+    populateFollowersData();
   }
 
   render() {
-    async function returnCardData(remoteDataSourceUri) {
-      await Axios.get(remoteDataSourceUri)
-      .then(res => {
-        let d = res.data;
-        // return card(d);
-        return d;
-      })
-      .catch(e => console.log("Error: ", e));
-    }
+    console.log('this.state: ', this.state);
 
     function card(data) {
       return (
@@ -60,10 +64,6 @@ class App extends React.Component {
       );
     }
 
-    console.log('this.state: ', this.state);
-    let data = this.state.myGitHubData;
-    console.log('data: ', data);
-
     return (
       <div className="container">
         <div className="header">
@@ -74,14 +74,12 @@ class App extends React.Component {
         <div className="cards">
           <h2>Me</h2>
           {
-            card(data)
+            card(this.state.myGitHubData)
           }
 
           <h2>Followers</h2>
           {
             this.state.myFollowers.map(data => {
-              // let d = returnCardData("https://api.github.com/users/"+data.login);
-              // console.log('d: ', d);
               return (
                 card(data)
               );
